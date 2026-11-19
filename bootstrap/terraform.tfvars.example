@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars
+account_id        = "123456789012"
+github_repository = "your-org/gha-aws-oidc-template"
+region            = "eu-west-3"
+
+# false if aws iam list-open-id-connect-providers already shows the GitHub provider
+create_oidc_provider = true
