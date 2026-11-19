@@ -1,0 +1,37 @@
+# Expected to fail, the trust policy only accepts main
+name: prove-deny
+
+on:
+  push:
+    branches: ["feature/**"]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  try-to-assume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Print the sub claim AWS will see
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: echo "sub = repo:${REPOSITORY}:ref:${REF}"
+
+      - name: Assume deploy role over OIDC (should be denied)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: gha-deny-${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION }}
+          retry-max-attempts: 1
+
+      - name: Only reached if the trust policy is too loose
+        run: |
+          echo "::error::Role was assumed from ${GITHUB_REF}. The trust policy is too permissive."
+          aws sts get-caller-identity
+          exit 1

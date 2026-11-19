@@ -1,0 +1,21 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+backend.hcl
+terraform.tfvars
+bootstrap/.build/
+
+# Pipeline build output
+build/
+
+# Talk material lives outside the template
+*.pdf
+
+.DS_Store
+
+# Checkov module cache
+.external_modules/

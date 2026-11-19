@@ -1,0 +1,76 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write # lets the job request an OIDC token from GitHub
+      contents: read
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      FUNCTION_NAME: ${{ vars.FUNCTION_NAME }}
+      FUNCTION_URL: ${{ vars.FUNCTION_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Assume deploy role over OIDC
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: gha-${{ github.run_id }}-${{ github.run_attempt }}
+          role-duration-seconds: 900
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Show who we are
+        run: aws sts get-caller-identity
+
+      - name: Build
+        run: |
+          mkdir -p build
+          cp app/index.mjs build/
+          jq -n \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg branch "$GITHUB_REF_NAME" \
+            --arg commit "$GITHUB_SHA" \
+            --arg oidcSubject "repo:${GITHUB_REPOSITORY}:ref:${GITHUB_REF}" \
+            --arg assumedRole "$(aws sts get-caller-identity --query Arn --output text)" \
+            --arg workflowRun "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --arg deployedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '$ARGS.named + {credentialLifetime: "15 minutes", storedSecrets: 0}' \
+            > build/deploy.json
+          cat build/deploy.json
+          (cd build && zip -q function.zip index.mjs deploy.json)
+
+      - name: Deploy
+        run: |
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file fileb://build/function.zip \
+            --query '{version:Version,sha256:CodeSha256}'
+          aws lambda wait function-updated-v2 --function-name "$FUNCTION_NAME"
+
+      - name: Smoke test
+        if: env.FUNCTION_URL != ''
+        run: |
+          body="$(curl -fsS --retry 3 --retry-delay 2 "$FUNCTION_URL")"
+          echo "$body"
+          echo "$body" | grep -q "$GITHUB_SHA"
+          {
+            echo "### Deployed \`${GITHUB_SHA::7}\`"
+            echo "$FUNCTION_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
