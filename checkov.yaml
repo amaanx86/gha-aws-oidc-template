@@ -1,0 +1,19 @@
+directory:
+  - .
+framework:
+  - terraform
+  - github_actions
+# Scan resources inside the registry modules, not just the module calls
+download-external-modules: true
+soft-fail: false
+compact: true
+quiet: true
+skip-check:
+  # Registry modules pinned to exact versions, Dependabot proposes each bump as a PR
+  - CKV_TF_1
+  # Function URL is public on purpose, reserved concurrency of 5 bounds abuse and cost
+  - CKV_AWS_258
+  # Demo logs hold only request metadata, 7-day retention keeps cost and residue low
+  - CKV_AWS_338
+  # Single function with no downstream calls to trace
+  - CKV_AWS_50
