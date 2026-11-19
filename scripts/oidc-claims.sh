@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Prints the claims AWS checks from this job's GitHub OIDC token, never the token itself
 # Runs inside a GitHub Actions job with permissions id-token: write
+# Usage: scripts/oidc-claims.sh [out.json]
 set -euo pipefail
 
 : "${ACTIONS_ID_TOKEN_REQUEST_URL:?needs permissions id-token: write}"
@@ -12,4 +13,6 @@ echo "::add-mask::${token}"
 payload="$(cut -d. -f2 <<<"$token" | tr '_-' '/+')"
 while (( ${#payload} % 4 )); do payload+="="; done
 
-base64 -d <<<"$payload" | jq '{iss, aud, sub, repository, ref, event_name}'
+claims="$(base64 -d <<<"$payload" | jq '{iss, aud, sub, repository, ref, event_name}')"
+echo "$claims"
+if [[ -n "${1:-}" ]]; then echo "$claims" > "$1"; fi

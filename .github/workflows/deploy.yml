@@ -37,20 +37,21 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Show the token claims AWS checked
-        run: scripts/oidc-claims.sh | tee oidc-claims.json
+        run: scripts/oidc-claims.sh oidc-claims.json
 
       - name: Show who we are
         run: aws sts get-caller-identity
 
       - name: Build
         run: |
+          oidc_sub="$(jq -er .sub oidc-claims.json)"
           mkdir -p build
           cp app/index.mjs build/
           jq -n \
             --arg repository "$GITHUB_REPOSITORY" \
             --arg branch "$GITHUB_REF_NAME" \
             --arg commit "$GITHUB_SHA" \
-            --arg oidcSubject "$(jq -r .sub oidc-claims.json)" \
+            --arg oidcSubject "$oidc_sub" \
             --arg assumedRole "$(aws sts get-caller-identity --query Arn --output text)" \
             --arg workflowRun "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             --arg deployedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
