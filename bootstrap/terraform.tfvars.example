@@ -1,6 +1,9 @@
 # Copy to terraform.tfvars
 account_id        = "123456789012"
 github_repository = "your-org/gha-aws-oidc-template"
+
+# Output of gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix
+github_sub_prefix = "repo:your-org@12345/gha-aws-oidc-template@67890"
 region            = "eu-west-3"
 
 # false if aws iam list-open-id-connect-providers already shows the GitHub provider

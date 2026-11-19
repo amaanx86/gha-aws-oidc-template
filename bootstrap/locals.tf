@@ -1,7 +1,8 @@
 locals {
   github_oidc_host = "token.actions.githubusercontent.com"
 
-  deploy_subject = "repo:${var.github_repository}:ref:refs/heads/main"
+  sub_prefix     = coalesce(var.github_sub_prefix, "repo:${var.github_repository}")
+  deploy_subject = "${local.sub_prefix}:ref:refs/heads/main"
 
   function_name = "${var.project}-demo"
   role_name     = "gha-deploy"
