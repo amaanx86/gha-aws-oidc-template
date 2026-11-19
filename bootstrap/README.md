@@ -1,12 +1,8 @@
 # bootstrap
 
-One-time, locally applied Terraform that creates everything the pipeline needs and nothing
-the pipeline can change: the GitHub OIDC provider (optional), the `gha-deploy` role, and the
-demo Lambda function with a public function URL. See the [root README](../README.md) for usage.
+One-time, locally applied Terraform that creates everything the pipeline needs and nothing the pipeline can change: the GitHub OIDC provider (optional), the `gha-deploy` role, and the demo Lambda function with a public function URL. See the [root README](../README.md) for usage.
 
-Built on [terraform-aws-modules](https://registry.terraform.io/namespaces/terraform-aws-modules),
-pinned to exact versions: `iam` 6.8.2 (`iam-oidc-provider`, `iam-role`) and `lambda` 8.13.0.
-Dependabot proposes upgrades as pull requests.
+Built on [terraform-aws-modules](https://registry.terraform.io/namespaces/terraform-aws-modules), pinned to exact versions: `iam` 6.8.2 (`iam-oidc-provider`, `iam-role`) and `lambda` 8.13.0. Dependabot proposes upgrades as pull requests.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -50,6 +46,7 @@ Dependabot proposes upgrades as pull requests.
 | account\_id | AWS account ID the stack is allowed to run against. | `string` | n/a | yes |
 | github\_repository | GitHub repository allowed to assume the deploy role, as owner/name. | `string` | n/a | yes |
 | create\_oidc\_provider | Create the GitHub OIDC provider. Set to false when the account already has one:<br/>IAM allows only one provider per issuer URL, and a provider owned by this stack<br/>would be deleted on destroy, breaking every other pipeline that relies on it. | `bool` | `true` | no |
+| github\_sub\_prefix | OIDC sub prefix GitHub issues for the repository. Required when the repository uses<br/>immutable subjects (repo:owner@id/name@id). Read it with<br/>gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub\_claim\_prefix<br/>Defaults to repo:<github\_repository>. | `string` | `null` | no |
 | project | Project name, used as the prefix for resource names. | `string` | `"zero-keys"` | no |
 | region | AWS region for the demo Lambda function. | `string` | `"eu-west-3"` | no |
 

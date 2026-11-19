@@ -30,6 +30,22 @@ variable "github_repository" {
   }
 }
 
+variable "github_sub_prefix" {
+  description = <<-EOT
+    OIDC sub prefix GitHub issues for the repository. Required when the repository uses
+    immutable subjects (repo:owner@id/name@id). Read it with
+    gh api repos/OWNER/REPO/actions/oidc/customization/sub --jq .sub_claim_prefix
+    Defaults to repo:<github_repository>.
+  EOT
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.github_sub_prefix == null || can(regex("^repo:[^*?]+$", var.github_sub_prefix))
+    error_message = "github_sub_prefix must start with repo: and contain no wildcards."
+  }
+}
+
 variable "create_oidc_provider" {
   description = <<-EOT
     Create the GitHub OIDC provider. Set to false when the account already has one:
