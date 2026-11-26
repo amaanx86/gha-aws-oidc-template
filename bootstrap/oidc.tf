@@ -1,6 +1,6 @@
 module "github_oidc_provider" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-oidc-provider"
-  version = "6.8.2"
+  version = "6.11.1"
 
   create = var.create_oidc_provider
   url    = "https://${local.github_oidc_host}"
