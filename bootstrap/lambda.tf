@@ -7,7 +7,7 @@ data "archive_file" "bootstrap" {
 
 module "lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "8.13.0"
+  version = "8.13.2"
 
   function_name = local.function_name
   description   = "Zero Keys to Production demo, deployed by GitHub Actions over OIDC."
