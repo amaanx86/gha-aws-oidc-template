@@ -1,6 +1,6 @@
 module "gha_deploy_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role"
-  version = "6.8.2"
+  version = "6.11.1"
 
   name            = local.role_name
   use_name_prefix = false
